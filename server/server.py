@@ -1,5 +1,5 @@
-from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo, ObjectId
+from flask import Flask
+from flask_pymongo import PyMongo
 from flask_cors import CORS
 
 # Import configuration values
