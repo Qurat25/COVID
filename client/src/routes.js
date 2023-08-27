@@ -38,6 +38,7 @@ Coded by www.creative-tim.com
 // Material Dashboard 2 React layouts
 import HotspotsMap from "layouts/Frontend/HotspotsMap/HotspotsMap";
 import DatesForm from "layouts/Frontend/DatesForm";
+import TimeSeriesMap from "layouts/Frontend/TimeSeriesMap";
 import Dashboard from "layouts/dashboard";
 import Tables from "layouts/tables";
 import Billing from "layouts/billing";
@@ -53,11 +54,19 @@ import Icon from "@mui/material/Icon";
 const routes = [
   {
     type: "collapse",
-    name: "Dashboard",
-    key: "dashboard",
+    name: "Total Hotspots Map",
+    key: "hotspots",
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
     component: <HotspotsMap />,
+  },
+  {
+    type: "collapse",
+    name: "Time Series Map",
+    key: "timeseries",
+    icon: <Icon fontSize="small">map</Icon>,
+    route: "/timeseries",
+    component: <TimeSeriesMap />,
   },
   {
     type: "collapse",

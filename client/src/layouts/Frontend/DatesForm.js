@@ -14,9 +14,9 @@ const DatesForm = () => {
   const [data, setData] = useState([]);
 
   // Function to fetch data from Flask API
-  const fetchData = async () => {
+  const getAllLocations = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/getAllData");
+      const response = await axios.get("http://localhost:5000/api/getAllLocations");
       const filteredData = [];
       for (const location of response.data) {
         let data1 = {
@@ -61,7 +61,7 @@ const DatesForm = () => {
 
   // Using useEffect for single rendering
   useEffect(() => {
-    fetchData();
+    getAllLocations();
   }, []);
 
   const collectData = async (event) => {

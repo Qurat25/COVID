@@ -3,14 +3,32 @@ import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import axios from "axios";
 
-function HotspotsMap() {
+function TimeSeriesMap() {
   const [data, setData] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(""); // State to store selected date
+  const [sliderValue, setSliderValue] = useState(0);
+  const [locationData, setLocationData] = useState([]);
 
   // Function to fetch data from Flask API
-  const getAllLocations = async () => {
+  const getAllDates = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/getAllLocations");
-      const location_data = response.data;
+      const response = await axios.get("http://localhost:5000/api/getAllDates");
+      setData(response.data); // Update the dates state with fetched data
+      if (response.data.length > 0) {
+        setSelectedDate(response.data[0].date); // Set default selected date
+      }
+      // setData(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const getLocationByDate = async (filterDate) => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/getLocationByDate", {
+        params: { filterDate: filterDate },
+      });
+      const location_data = response.data[0].populated_location;
       var filterData = [];
 
       for (const location of location_data) {
@@ -29,29 +47,51 @@ function HotspotsMap() {
           });
         }
       }
-      setData(filterData);
-      // setData(response.data);
+      setLocationData(filterData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
+  const handleDateChange = (event) => {
+    const selectedIndex = parseInt(event.target.value, 10);
+    setSliderValue(selectedIndex);
+    setSelectedDate(data[selectedIndex]?.date);
+    getLocationByDate(data[selectedIndex]?.date);
+  };
+
   // Using useEffect for single rendering
   useEffect(() => {
-    getAllLocations();
+    getAllDates();
+    getLocationByDate("2020-05-03");
   }, []);
 
-  console.log(data);
   return (
     <DashboardLayout>
+      <div className="slider-container">
+        <input
+          type="range"
+          min="0"
+          max={data.length - 1}
+          value={sliderValue}
+          onChange={handleDateChange}
+          list="dateOptions"
+        />
+        <datalist id="dateOptions">
+          {data.map((item, index) => (
+            <option key={index} value={index} label={item.date} />
+          ))}
+        </datalist>
+        <p>Selected Date: {selectedDate}</p>
+      </div>
       <div className="leaflet-container">
         <MapContainer center={[33.5844, 73.0479]} zoom={11} scrollWheelZoom={true}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           />
-          {data.length > 0 &&
-            data.map((item, index) => (
+          {locationData.length > 0 &&
+            locationData.map((item, index) => (
               <CircleMarker
                 key={item._id}
                 center={[item.latitude, item.longitude]}
@@ -70,4 +110,4 @@ function HotspotsMap() {
     </DashboardLayout>
   );
 }
-export default HotspotsMap;
+export default TimeSeriesMap;

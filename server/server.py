@@ -16,8 +16,8 @@ mongo = PyMongo(app)
 
 CORS(app)
 
-@app.route('/api/getAllData', methods=['GET'])
-def get_all_data():
+@app.route('/api/getAllLocations', methods=['GET'])
+def getAllLocations():
     collection = mongo.db.locations # Replace 'collection_name' with the name of your collection
     cursor = collection.find()
     data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
@@ -46,6 +46,38 @@ def addDate():
     except Exception as e:
         response_data = {"message": "Error submitting data", "error": str(e)}
         return jsonify(response_data), 500
+    
+@app.route('/api/getAllDates', methods=['GET'])
+def getAllDates():
+    collection = mongo.db.date # Replace 'collection_name' with the name of your collection
+    cursor = collection.find()
+    data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
+    return data
+
+@app.route('/api/getLocationByDate', methods=['GET'])
+def getLocationByDate():
+    collection = mongo.db.date # Replace 'collection_name' with the name of your collection
+    filterDate = request.args.get('filterDate')
+    # Construct the query filter
+    query = {'date': filterDate}
+    
+    # Perform a lookup to populate the 'location' array
+    cursor = collection.aggregate([
+        {'$match': query},
+        {'$lookup': {
+            'from': 'locations',  # Replace 'locations' with the actual name of the referenced collection
+            'localField': 'location',
+            'foreignField': '_id',
+            'as': 'populated_location'
+        }},
+        {'$project': {
+            '_id': 0,
+            'date': 1,
+            'populated_location': 1
+        }}
+    ])
+    data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
+    return data
 	
 # Running app
 if __name__ == '__main__':
