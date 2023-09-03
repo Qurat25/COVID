@@ -2,6 +2,7 @@ from flask import Flask
 from flask_pymongo import PyMongo
 from flask_cors import CORS
 from geopy.geocoders import Nominatim
+import xml.etree.ElementTree as ET
 
 def get_latitude_longitude(location):
     print(location)
@@ -153,15 +154,61 @@ def seed_data():
     # db.insert_one({"name": 'School Road F-6/1', "latitude": 33.72890688327043, "longitude": 73.07313791090438})
     # db.insert_one({"name": 'Street 10, Media Town', "latitude": 33.560572301270405, "longitude": 73.13005827859874})
     # db.insert_one({"name": 'Street 15, Block A, Media Town', "latitude": 33.56697225910685, "longitude": 73.11921419889148})
-    db.insert_one({"name": 'Street 30, Phase 1, Pakistan Town', "latitude": 33.578733466106804, "longitude": 73.14148048059597})
-    db.insert_one({"name": 'Street 5, Korang Town', "latitude": 33.580832014927516, "longitude": 73.14518296340519})
+    # db.insert_one({"name": 'Street 30, Phase 1, Pakistan Town', "latitude": 33.578733466106804, "longitude": 73.14148048059597})
+    # db.insert_one({"name": 'Street 5, Korang Town', "latitude": 33.580832014927516, "longitude": 73.14518296340519})
 
     print('seeders end')
 
-# seed_data()
+def polygon_data():
+    print('seeders start')
+    db = mongo.db.polygon
+
+    # Load the KML file
+    tree = ET.parse('Islamabad.kml')
+    root = tree.getroot()
+
+    # Find the Placemark with the name "Kot Hatial"
+    target_name = "NIH Colony"
+    target_placemark = None
+
+    for placemark in root.findall(".//{http://www.opengis.net/kml/2.2}Placemark"):
+        name_element = placemark.find("{http://www.opengis.net/kml/2.2}name")
+        if name_element is not None and name_element.text == target_name:
+            target_placemark = placemark
+            break
+
+    if target_placemark is None:
+        print(f"Placemark with name '{target_name}' not found.")
+    else:
+        # Find the Polygon coordinates
+        polygon_element = target_placemark.find(".//{http://www.opengis.net/kml/2.2}Polygon")
+        coordinates_element = polygon_element.find(".//{http://www.opengis.net/kml/2.2}coordinates")
+
+        if coordinates_element is not None:
+            coordinates_text = coordinates_element.text
+            # Split the coordinates into individual points
+            coordinates_list = coordinates_text.strip().split()
+            polygon_coordinates = []
+
+            for coordinate in coordinates_list:
+                # Split each coordinate into longitude, latitude, and altitude (if available)
+                parts = coordinate.split(',')
+                longitude = float(parts[0])
+                latitude = float(parts[1])
+                polygon_coordinates.append([latitude, longitude])
+
+            # Print the coordinates in a format suitable for React Leaflet
+            print("Polygon coordinates for React Leaflet:")
+            print(polygon_coordinates)
+            db.insert_one({"name": 'NIH Colony', "coordinates": polygon_coordinates})
+        else:
+            print(f"No coordinates found for '{target_name}'.")
+    print('seeders end')
+
 
 CORS(app)
 	
 # Running app
 if __name__ == '__main__':
-	seed_data()
+	# seed_data()
+    polygon_data()

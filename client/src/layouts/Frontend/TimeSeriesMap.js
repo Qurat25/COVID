@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import axios from "axios";
 
@@ -8,6 +8,10 @@ function TimeSeriesMap() {
   const [selectedDate, setSelectedDate] = useState(""); // State to store selected date
   const [sliderValue, setSliderValue] = useState(0);
   const [locationData, setLocationData] = useState([]);
+  const Icon = L.icon({
+    iconUrl: "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  });
 
   // Function to fetch data from Flask API
   const getAllDates = async () => {
@@ -92,18 +96,13 @@ function TimeSeriesMap() {
           />
           {locationData.length > 0 &&
             locationData.map((item, index) => (
-              <CircleMarker
-                key={item._id}
-                center={[item.latitude, item.longitude]}
-                radius={15}
-                pathOptions={{ color: "red" }}
-              >
+              <Marker key={item._id} position={[item.latitude, item.longitude]} icon={Icon}>
                 <Popup>
                   <div>
                     <strong>{item.name}</strong>
                   </div>
                 </Popup>
-              </CircleMarker>
+              </Marker>
             ))}
         </MapContainer>
       </div>

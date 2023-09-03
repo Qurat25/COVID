@@ -78,6 +78,13 @@ def getLocationByDate():
     ])
     data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
     return data
+
+@app.route('/api/getAllPolygons', methods=['GET'])
+def getAllPolygons():
+    collection = mongo.db.polygon # Replace 'collection_name' with the name of your collection
+    cursor = collection.find()
+    data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
+    return data
 	
 # Running app
 if __name__ == '__main__':
