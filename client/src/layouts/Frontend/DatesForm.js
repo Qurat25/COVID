@@ -12,6 +12,9 @@ const DatesForm = () => {
   const [selectedLocation, setSelectedLocation] = useState([]);
   const [locationTemp, setLocationTemp] = useState([]);
   const [data, setData] = useState([]);
+  const [polygonData, setPolygonData] = useState([]);
+  const [selectedPolygon, setSelectedPolygon] = useState([]);
+  const [polygonTemp, setPolygonTemp] = useState([]);
 
   // Function to fetch data from Flask API
   const getAllLocations = async () => {
@@ -31,6 +34,23 @@ const DatesForm = () => {
     }
   };
 
+  const getAllPolygons = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/getAllPolygons");
+      const filteredData = [];
+      for (const location of response.data) {
+        let data1 = {
+          value: location._id.$oid,
+          label: location.name,
+        };
+        filteredData.push(data1);
+      }
+      setPolygonData(filteredData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const handleDateChange = (event) => {
     setSelectedDate(event.target.value);
   };
@@ -42,6 +62,15 @@ const DatesForm = () => {
       locations.push(i.value);
     }
     setSelectedLocation(locations);
+  };
+
+  const handlePolygonChange = (event) => {
+    setPolygonTemp(event);
+    const locations = [];
+    for (const i of event) {
+      locations.push(i.value);
+    }
+    setSelectedPolygon(locations);
   };
 
   // Function to filter options based on the search query
@@ -62,6 +91,7 @@ const DatesForm = () => {
   // Using useEffect for single rendering
   useEffect(() => {
     getAllLocations();
+    getAllPolygons();
   }, []);
 
   const collectData = async (event) => {
@@ -71,8 +101,8 @@ const DatesForm = () => {
       const response = await axios.post("http://localhost:5000/api/addDate", {
         date: selectedDate,
         location: selectedLocation,
+        polygon: selectedPolygon,
       });
-      console.log(response.data.message);
       if (response.status === 200) {
         alert("Data saved");
       }
@@ -98,6 +128,19 @@ const DatesForm = () => {
               onChange={handleLocationChange}
               isMulti
               options={data}
+              filterOption={filterLocationOptions}
+              styles={optionStyles}
+            />
+            <label>Polygon:</label>
+            <Select
+              id="polygons"
+              className="multi-select"
+              closeMenuOnSelect={false}
+              components={makeAnimated()}
+              value={polygonTemp}
+              onChange={handlePolygonChange}
+              isMulti
+              options={polygonData}
               filterOption={filterLocationOptions}
               styles={optionStyles}
             />

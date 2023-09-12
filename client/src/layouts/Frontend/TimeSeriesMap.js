@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polygon } from "react-leaflet";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import axios from "axios";
 
@@ -8,6 +8,7 @@ function TimeSeriesMap() {
   const [selectedDate, setSelectedDate] = useState(""); // State to store selected date
   const [sliderValue, setSliderValue] = useState(0);
   const [locationData, setLocationData] = useState([]);
+  const [polygonData, setPolygonData] = useState([]);
   const Icon = L.icon({
     iconUrl: "https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
@@ -57,17 +58,40 @@ function TimeSeriesMap() {
     }
   };
 
+  const getPolygonByDate = async (filterDate) => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/getPolygonByDate", {
+        params: { filterDate: filterDate },
+      });
+      console.log(response);
+      const location_data = response.data[0].populated_polygon;
+      var filterData = [];
+
+      for (const location of location_data) {
+        filterData.push({
+          coordinates: location.coordinates,
+          name: location.name,
+          _id: location._id.$oid,
+        });
+      }
+      setPolygonData(filterData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
   const handleDateChange = (event) => {
     const selectedIndex = parseInt(event.target.value, 10);
     setSliderValue(selectedIndex);
     setSelectedDate(data[selectedIndex]?.date);
     getLocationByDate(data[selectedIndex]?.date);
+    getPolygonByDate(data[selectedIndex]?.date);
   };
 
   // Using useEffect for single rendering
   useEffect(() => {
     getAllDates();
-    getLocationByDate("2020-05-03");
+    getPolygonByDate("2020-03-22");
   }, []);
 
   return (
@@ -103,6 +127,16 @@ function TimeSeriesMap() {
                   </div>
                 </Popup>
               </Marker>
+            ))}
+          {polygonData.length > 0 &&
+            polygonData.map((item, index) => (
+              <Polygon key={item._id} positions={item.coordinates} color="red">
+                <Popup>
+                  <div>
+                    <strong>{item.name}</strong>
+                  </div>
+                </Popup>
+              </Polygon>
             ))}
         </MapContainer>
       </div>

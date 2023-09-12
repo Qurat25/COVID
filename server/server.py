@@ -36,6 +36,12 @@ def addDate():
             
         # Replace the location IDs with the array of ObjectIds
         data["location"] = location_ids
+
+        # Convert polygon IDs to ObjectIds if necessary
+        polygon_ids = [ObjectId(polygon_id) for polygon_id in data["polygon"]]
+            
+        # Replace the location IDs with the array of ObjectIds
+        data["polygon"] = polygon_ids
                 
         # Insert the data into the "Date" collection
         inserted_id = date_collection.insert_one(data).inserted_id
@@ -74,6 +80,31 @@ def getLocationByDate():
             '_id': 0,
             'date': 1,
             'populated_location': 1
+        }}
+    ])
+    data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
+    return data
+
+@app.route('/api/getPolygonByDate', methods=['GET'])
+def getPolygonByDate():
+    collection = mongo.db.date # Replace 'collection_name' with the name of your collection
+    filterDate = request.args.get('filterDate')
+    # Construct the query filter
+    query = {'date': filterDate}
+    
+    # Perform a lookup to populate the 'location' array
+    cursor = collection.aggregate([
+        {'$match': query},
+        {'$lookup': {
+            'from': 'polygon',  # Replace 'locations' with the actual name of the referenced collection
+            'localField': 'polygon',
+            'foreignField': '_id',
+            'as': 'populated_polygon'
+        }},
+        {'$project': {
+            '_id': 0,
+            'date': 1,
+            'populated_polygon': 1
         }}
     ])
     data = json_util.dumps(list(cursor))  # Use json_util to serialize MongoDB data types
